@@ -1,0 +1,46 @@
+# Data (public datasets, downloaded via MOABB -- see README for source)
+data/
+kaggle_kernel/
+C-/
+
+# Trained model weights (large binaries -- not tracked; re-derivable via paper/train_*.py)
+paper/checkpoints/
+paper/checkpoints_seed999/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# LaTeX build artifacts
+*.aux
+*.bbl
+*.blg
+*.log
+*.out
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Misc project scaffolding not part of the paper
+TNSRE_Article_LaTeX_Template.zip
+paper/writeup/tnsre_template/
+paper/suggestions.docx
+paper/PROJECT_RETROSPECTIVE.md
+
+# Real-author manuscript sources -- kept local only during double-blind TMLR review.
+# Do not track any .tex file containing a literal, non-anonymized \author{} block
+# while review is active. Re-evaluate after acceptance.
+paper/writeup/tnsre_2026.tex
+/tmlr_2026.tex
+/tmlr-style-file-main/
+paper/writeup/tmlr_2026.tex
+paper/writeup/tmlr.sty
+paper/writeup/tmlr.bst
+paper/writeup/math_commands.tex
+paper/writeup/fancyhdr.sty
+paper/writeup/tmlr_style/

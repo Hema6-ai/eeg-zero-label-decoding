@@ -1,0 +1,14 @@
+experiment,condition,accuracy_mean,accuracy_std,kappa_mean,kappa_std,notes
+classical_riemannian_baseline,none,0.3600,0.0910,0.1466,0.1214,Tangent Space + Logistic Regression; no deep model
+classical_riemannian_baseline,ea,0.4724,0.1317,0.2966,0.1757,Tangent Space + Logistic Regression; no deep model
+classical_riemannian_baseline,ra,0.4709,0.1311,0.2945,0.1748,Tangent Space + Logistic Regression; no deep model
+frozen_mae_only_posthoc,none,0.2784,0.0229,0.0378,0.0306,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_only_posthoc,ea,0.2780,0.0266,0.0370,0.0360,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_only_posthoc,ra,0.2710,0.0225,0.0280,0.0300,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_grl_posthoc,none,0.2749,0.0275,0.0330,0.0370,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_grl_posthoc,ea,0.2978,0.0308,0.0640,0.0410,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_grl_posthoc,ra,0.3007,0.0342,0.0680,0.0460,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_club_scin_posthoc,none,0.2674,0.0228,0.0230,0.0300,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_club_scin_posthoc,ea,0.2872,0.0397,0.0500,0.0530,Alignment applied only at eval time to an encoder pretrained on unaligned data
+frozen_mae_club_scin_posthoc,ra,0.2867,0.0406,0.0490,0.0540,Alignment applied only at eval time to an encoder pretrained on unaligned data
+mae_pretrained_with_ea,ea,0.2587,0.0178,0.0116,0.0237,EA applied consistently during PhysioNet pretraining AND BNCI zero-shot eval (encoder trained on aligned data from scratch)

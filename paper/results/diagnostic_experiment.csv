@@ -1,0 +1,5 @@
+diagnostic,condition,accuracy_mean,accuracy_std,kappa_mean,kappa_std,notes
+in_distribution_probe,mae_only,0.3218,0.0387,0.0957,0.0516,Frozen CLS features + LogisticRegression; same-subject train/test session split, no cross-subject transfer
+in_distribution_probe,mae_grl,0.2944,0.0386,0.0592,0.0515,Frozen CLS features + LogisticRegression; same-subject train/test session split, no cross-subject transfer
+in_distribution_probe,mae_club_scin,0.2948,0.0357,0.0597,0.0475,Frozen CLS features + LogisticRegression; same-subject train/test session split, no cross-subject transfer
+csp_baseline,csp_lr,0.5324,0.1355,0.3765,0.1806,CSP (6 components, ledoit_wolf reg) + LogisticRegression; same-subject train/test session split
