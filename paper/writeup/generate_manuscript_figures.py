@@ -78,7 +78,7 @@ for i in range(len(methods)):
 ax.set_xlabel("Held-out subject (BCI-IV 2a)")
 cbar = plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
 cbar.set_label("Accuracy (%)", fontsize=8)
-ax.set_title("Subject 2 never crosses ~32% under any method")
+ax.set_title("Subject 2 never crosses ~32% under any zero-shot method")
 plt.tight_layout()
 plt.savefig(os.path.join(FIG_DIR, "per_subject_heatmap.png"), dpi=200)
 plt.close()
@@ -126,7 +126,7 @@ ax.axvline(25, color="gray", linestyle=":", linewidth=1)
 ax.axvline(58.68, color="firebrick", linestyle="--", linewidth=1.2)
 ax.set_xlabel("Zero-shot LOSO accuracy (%)")
 ax.set_xlim(0, 75)
-ax.set_title("All zero-shot methods tried, sorted by accuracy")
+ax.set_title("Representative zero-shot methods tried, sorted by accuracy")
 from matplotlib.patches import Patch
 legend_elems = [Patch(facecolor=c, label=l) for l, c in cat_colors.items()]
 ax.legend(handles=legend_elems, loc="lower right", fontsize=7.5, framealpha=0.9)
