@@ -44,3 +44,7 @@ paper/writeup/tmlr.bst
 paper/writeup/math_commands.tex
 paper/writeup/fancyhdr.sty
 paper/writeup/tmlr_style/
+# Compiled PDF: the tmlr.sty default build renders "Anonymous authors" (verified each compile
+# this revision), so this is defense-in-depth, not evidence of an actual leak -- it stays
+# untracked so an accidental compile with [preprint]/[accepted] can never be committed by mistake.
+/tmlr_2026.pdf

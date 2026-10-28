@@ -17,7 +17,7 @@ from torch.utils.data import DataLoader, TensorDataset, random_split
 
 from paper import config
 from paper.augment_supcon import make_two_views
-from paper.data import load_physionet_supcon
+from paper.data import load_bnci_pretrain_labeled, load_physionet_supcon
 from paper.models.encoder import EEGTransformerEncoder
 from paper.models.projection_head import ProjectionHead
 from paper.models.supcon_loss import supcon_loss
@@ -47,12 +47,17 @@ def build_scheduler(optimizer, warmup_epochs, total_epochs):
     return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, cosine], milestones=[warmup_epochs])
 
 
-def run(subjects=None, epochs: int = None, device: str = None):
+def run(subjects=None, epochs: int = None, device: str = None, source: str = "physionet"):
+    """source: "physionet" (default) or "bnci" -- see paper/data.py::load_bnci_pretrain docstring."""
+    assert source in ("physionet", "bnci")
     config.set_seed(config.SEED)
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     epochs = epochs or config.SUPCON_EPOCHS
 
-    X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
+    if source == "bnci":
+        X, y, subject_ids, label_encoder, subject_encoder = load_bnci_pretrain_labeled(subjects)
+    else:
+        X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
     n_channels, n_times = X.shape[1], X.shape[2]
     print(f"SupCon pretraining classes: {list(label_encoder.classes_)}, "
           f"n_trials={len(X)}, n_subjects={len(subject_encoder.classes_)}")
@@ -71,7 +76,8 @@ def run(subjects=None, epochs: int = None, device: str = None):
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.SUPCON_LR,
                                    weight_decay=config.SUPCON_WEIGHT_DECAY)
     scheduler = build_scheduler(optimizer, config.SUPCON_WARMUP_EPOCHS, epochs)
-    logger = EpochLogger(os.path.join(config.RESULTS_DIR, "pretrain_supcon.csv"))
+    logger = EpochLogger(os.path.join(
+        config.RESULTS_DIR, "pretrain_supcon" + ("_srcbnci" if source == "bnci" else "") + ".csv"))
 
     best_val_loss = float("inf")
     for epoch in range(1, epochs + 1):
@@ -120,7 +126,8 @@ def run(subjects=None, epochs: int = None, device: str = None):
 
         best_val_loss = maybe_save_periodic_and_best(
             model, optimizer, epoch, val_loss, best_val_loss,
-            config.CHECKPOINT_DIR, "pretrain_supcon", config.SUPCON_CHECKPOINT_EVERY,
+            config.CHECKPOINT_DIR, "pretrain_supcon" + ("_srcbnci" if source == "bnci" else ""),
+            config.SUPCON_CHECKPOINT_EVERY,
         )
 
     return model, subject_encoder

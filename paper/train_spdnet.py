@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader, TensorDataset
 
 from paper import config
 from paper.align import align_per_subject
-from paper.data import load_physionet_supcon
+from paper.data import load_bnci_pretrain_labeled, load_physionet_supcon
 from paper.models.spdnet import SPDNetModel
 from paper.utils import EpochLogger, maybe_save_periodic_and_best
 
@@ -26,30 +26,42 @@ def build_scheduler(optimizer, warmup_epochs, total_epochs):
     return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, cosine], milestones=[warmup_epochs])
 
 
-def prepare_covariances(subjects=None):
-    """EA per subject -> Covariances(lwf). Returns (covs (M,22,22), labels (M,), subject_ids (M,))."""
-    X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
+def prepare_covariances(subjects=None, source: str = "physionet", cov_estimator: str = "lwf"):
+    """EA per subject -> Covariances(cov_estimator). Returns (covs (M,22,22), labels (M,), subject_ids (M,)).
+
+    source: "physionet" (default) or "bnci" -- see paper/data.py::load_bnci_pretrain docstring.
+    cov_estimator: "lwf" (default, reproduces the manuscript's checkpoints) or any other
+    pyriemann.estimation.Covariances estimator (e.g. "corr") -- added for the factorial
+    preprocessing-vs-architecture experiment (TMLR revision, Phase IV)."""
+    if source == "bnci":
+        X, y, subject_ids, label_encoder, subject_encoder = load_bnci_pretrain_labeled(subjects)
+    else:
+        X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
     per_subject_X = {s: X[subject_ids == s] for s in np.unique(subject_ids)}
     aligned = align_per_subject(per_subject_X, "ea")
 
     out_X, out_y, out_ids = [], [], []
     for s in aligned:
         mask = subject_ids == s
-        covs = Covariances(estimator="lwf").fit_transform(aligned[s].astype(np.float64)).astype(np.float32)
+        covs = Covariances(estimator=cov_estimator).fit_transform(aligned[s].astype(np.float64)).astype(np.float32)
         out_X.append(covs)
         out_y.append(y[mask])
         out_ids.append(subject_ids[mask])
     return np.concatenate(out_X), np.concatenate(out_y), np.concatenate(out_ids), label_encoder, subject_encoder
 
 
-def run(subjects=None, epochs: int = None, device: str = None):
+def run(subjects=None, epochs: int = None, device: str = None, source: str = "physionet",
+        cov_estimator: str = "lwf"):
+    assert source in ("physionet", "bnci")
     config.set_seed(config.SEED)
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     epochs = epochs or config.SPDNET_EPOCHS
+    suffix = ("_srcbnci" if source == "bnci" else "") + ("_corrcov" if cov_estimator != "lwf" else "")
 
-    covs, y, subject_ids, label_encoder, subject_encoder = prepare_covariances(subjects)
+    covs, y, subject_ids, label_encoder, subject_encoder = prepare_covariances(
+        subjects, source=source, cov_estimator=cov_estimator)
     print(f"SPDNet pretrain classes: {list(label_encoder.classes_)}, "
-          f"n_trials={len(covs)}, n_subjects={len(np.unique(subject_ids))}")
+          f"n_trials={len(covs)}, n_subjects={len(np.unique(subject_ids))}, cov_estimator={cov_estimator}")
 
     all_subjects = np.unique(subject_ids)
     n_val_subjects = max(1, int(0.1 * len(all_subjects)))
@@ -62,7 +74,7 @@ def run(subjects=None, epochs: int = None, device: str = None):
     model = SPDNetModel(dims=config.SPDNET_DIMS, n_classes=n_classes).to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.SPDNET_LR, weight_decay=config.SPDNET_WEIGHT_DECAY)
     scheduler = build_scheduler(optimizer, config.SPDNET_WARMUP_EPOCHS, epochs)
-    logger = EpochLogger(os.path.join(config.RESULTS_DIR, "pretrain_spdnet.csv"))
+    logger = EpochLogger(os.path.join(config.RESULTS_DIR, f"pretrain_spdnet{suffix}.csv"))
 
     train_loader = DataLoader(
         TensorDataset(torch.from_numpy(covs[train_mask]), torch.from_numpy(y[train_mask]).long()),
@@ -107,7 +119,8 @@ def run(subjects=None, epochs: int = None, device: str = None):
 
         best_val_loss = maybe_save_periodic_and_best(
             model, optimizer, epoch, val_loss, best_val_loss,
-            config.CHECKPOINT_DIR, "pretrain_spdnet", config.SPDNET_CHECKPOINT_EVERY,
+            config.CHECKPOINT_DIR, f"pretrain_spdnet{suffix}",
+            config.SPDNET_CHECKPOINT_EVERY,
         )
 
     return model, subject_encoder

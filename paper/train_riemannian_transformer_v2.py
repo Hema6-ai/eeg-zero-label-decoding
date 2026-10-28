@@ -20,7 +20,7 @@ from pyriemann.tangentspace import TangentSpace
 
 from paper import config
 from paper.align import align_per_subject
-from paper.data import load_physionet_supcon
+from paper.data import load_bnci_pretrain_labeled, load_physionet_supcon
 from paper.models.riemannian_transformer import TrialAttentionModel
 from paper.utils import EpochLogger, maybe_save_periodic_and_best
 
@@ -31,10 +31,15 @@ def build_scheduler(optimizer, warmup_epochs, total_epochs):
     return torch.optim.lr_scheduler.SequentialLR(optimizer, schedulers=[warmup, cosine], milestones=[warmup_epochs])
 
 
-def prepare_per_subject_tangent_vecs(subjects=None):
+def prepare_per_subject_tangent_vecs(subjects=None, source: str = "physionet"):
     """EA per subject -> Covariances(lwf) -> TangentSpace fit PER SUBJECT independently.
-    Returns {subject_id: (tangent_vecs (M,253), labels (M,))}."""
-    X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
+    Returns {subject_id: (tangent_vecs (M,253), labels (M,))}.
+
+    source: "physionet" (default) or "bnci" -- see paper/data.py::load_bnci_pretrain docstring."""
+    if source == "bnci":
+        X, y, subject_ids, label_encoder, subject_encoder = load_bnci_pretrain_labeled(subjects)
+    else:
+        X, y, subject_ids, label_encoder, subject_encoder = load_physionet_supcon(subjects)
     per_subject_X = {s: X[subject_ids == s] for s in np.unique(subject_ids)}
     per_subject_y = {s: y[subject_ids == s] for s in np.unique(subject_ids)}
     aligned = align_per_subject(per_subject_X, "ea")
@@ -59,13 +64,14 @@ def make_chunks(vecs, labels, n_trials, seed):
     return chunks
 
 
-def run(subjects=None, epochs: int = None, device: str = None):
+def run(subjects=None, epochs: int = None, device: str = None, source: str = "physionet"):
+    assert source in ("physionet", "bnci")
     config.set_seed(config.SEED)
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     epochs = epochs or config.RTV2_EPOCHS
     n_trials = config.RTV2_N_TRIALS
 
-    per_subject, label_encoder, subject_encoder = prepare_per_subject_tangent_vecs(subjects)
+    per_subject, label_encoder, subject_encoder = prepare_per_subject_tangent_vecs(subjects, source=source)
     print(f"Trial-attention pretrain classes: {list(label_encoder.classes_)}, "
           f"n_subjects={len(per_subject)}")
 
@@ -83,7 +89,9 @@ def run(subjects=None, epochs: int = None, device: str = None):
 
     optimizer = torch.optim.AdamW(model.parameters(), lr=config.RTV2_LR, weight_decay=config.RTV2_WEIGHT_DECAY)
     scheduler = build_scheduler(optimizer, config.RTV2_WARMUP_EPOCHS, epochs)
-    logger = EpochLogger(os.path.join(config.RESULTS_DIR, "pretrain_riemannian_transformer_v2.csv"))
+    logger = EpochLogger(os.path.join(
+        config.RESULTS_DIR,
+        "pretrain_riemannian_transformer_v2" + ("_srcbnci" if source == "bnci" else "") + ".csv"))
 
     best_val_loss = float("inf")
     for epoch in range(1, epochs + 1):
@@ -130,7 +138,9 @@ def run(subjects=None, epochs: int = None, device: str = None):
 
         best_val_loss = maybe_save_periodic_and_best(
             model, optimizer, epoch, val_loss, best_val_loss,
-            config.CHECKPOINT_DIR, "pretrain_riemannian_transformer_v2", config.RTV2_CHECKPOINT_EVERY,
+            config.CHECKPOINT_DIR,
+            "pretrain_riemannian_transformer_v2" + ("_srcbnci" if source == "bnci" else ""),
+            config.RTV2_CHECKPOINT_EVERY,
         )
 
     return model, subject_encoder

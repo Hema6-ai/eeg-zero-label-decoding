@@ -21,8 +21,8 @@ from paper.models.spdnet import SPDNetEncoder
 from paper.utils import classification_metrics
 
 
-def load_frozen_encoder(device):
-    ckpt_path = os.path.join(config.CHECKPOINT_DIR, "pretrain_spdnet_best.pt")
+def load_frozen_encoder(device, checkpoint_suffix: str = ""):
+    ckpt_path = os.path.join(config.CHECKPOINT_DIR, f"pretrain_spdnet{checkpoint_suffix}_best.pt")
     ckpt = torch.load(ckpt_path, map_location=device)
     encoder = SPDNetEncoder(dims=config.SPDNET_DIMS).to(device)
     encoder_state = {k[len("encoder."):]: v for k, v in ckpt["model"].items() if k.startswith("encoder.")}
@@ -57,15 +57,21 @@ def train_mlp_head(feats, labels, n_classes, device):
     return head
 
 
-def run(subjects=None, device: str = None):
+def run(subjects=None, device: str = None, cov_estimator: str = "lwf", checkpoint_suffix: str = None):
+    """cov_estimator: must match the estimator the frozen checkpoint was pretrained with (added
+    for the factorial preprocessing-vs-architecture experiment, TMLR revision Phase IV).
+    checkpoint_suffix: defaults to matching cov_estimator's convention (train_spdnet.py's
+    "_corrcov" suffix when cov_estimator != "lwf"); pass explicitly to override."""
     config.set_seed(config.SEED)
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     subjects = subjects or config.EVAL_SUBJECTS
+    if checkpoint_suffix is None:
+        checkpoint_suffix = "_corrcov" if cov_estimator != "lwf" else ""
 
     per_subject, label_encoder = load_bnci_all(subjects, align="ea")
     n_classes = len(label_encoder.classes_)
-    encoder = load_frozen_encoder(device)
-    cov = Covariances(estimator="lwf")
+    encoder = load_frozen_encoder(device, checkpoint_suffix=checkpoint_suffix)
+    cov = Covariances(estimator=cov_estimator)
 
     fold_results = []
     for held_out in subjects:
@@ -99,7 +105,8 @@ def run(subjects=None, device: str = None):
           f"kappa: {summary['kappa_mean']:.4f} +/- {summary['kappa_std']:.4f}")
 
     os.makedirs(config.RESULTS_DIR, exist_ok=True)
-    with open(os.path.join(config.RESULTS_DIR, "zero_shot_spdnet.csv"), "w", newline="") as f:
+    out_name = f"zero_shot_spdnet{checkpoint_suffix}.csv"
+    with open(os.path.join(config.RESULTS_DIR, out_name), "w", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=["held_out_subject", "accuracy", "kappa"])
         writer.writeheader()
         for r in fold_results:

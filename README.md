@@ -83,6 +83,34 @@ independently verified against that run's saved per-fold output
 (`paper/results/mekt_ensemble_verified_reference.csv`) before being added here — see the script's
 docstring for details. Nothing in it was tuned or reverse-engineered to hit the reported number.
 
+## TMLR review response (reports/, this revision)
+
+In response to reviewer ajnW's request for a comprehensive method-family comparison on PhysioNet
+and a comparison against a recent EEG foundation model, this revision adds:
+
+| Result | Accuracy | Script | Status |
+|---|---|---|---|
+| Comprehensive classical/domain-adaptation comparison, PhysioNet (8 methods, 109 subjects) | 40.3%-51.5% (see table) | `paper/eval_physionet_comprehensive.py` | reproducible, resumable per-fold |
+| Comprehensive deep-learning comparison, PhysioNet (5 methods, up to 109 subjects) | 33.0%-49.4% (see table) | `paper/run_physionet_deep_sweep.py` (Kaggle GPU) + `paper/eval_physionet_loso_deep.py` | reproducible given GPU; ran on Kaggle, see `reports/physionet_deep_learning_comparison.md` |
+| LaBraM (EEG foundation model) zero-shot comparison, BCI-IV 2a | 25.08% ± 1.74% (chance) | `paper/eval_foundation_model_labram.py` | reproducible, CPU-feasible |
+| Statistical analysis (both populations, Holm-Bonferroni corrected) | see `paper/results/statistical_tests_*.csv` | `paper/stats_analysis.py`, `paper/eval_mekt_progression.py` | reproducible |
+| Full factorial design: 4 windows × 2 estimators × {FgMDM, MEKT} (16 cells) + SPDNet estimator check | see `paper/results/factorial_statistical_analysis.csv` | `paper/eval_factorial.py` (CPU), `paper/train_spdnet.py --cov-estimator corr` (GPU) + `paper/eval_zero_shot_spdnet.py`, then `paper/stats_factorial.py` | reproducible, resumable per-cell |
+| Leave-one-subject-out jackknife robustness (4 key PhysioNet comparisons) | see `paper/results/robustness_subject_influence.csv` | `paper/robustness_subject_influence.py` | reproducible, deterministic |
+| Independent claim verification (every aggregate number vs. raw per-subject CSVs) | 16/16 verified | `paper/verify_all_claims.py` | reproducible, deterministic |
+| Machine-readable claim-to-evidence audit (every manuscript number mapped to script+data) | 46/46 verified | `paper/build_claim_evidence_audit.py` → `reports/claim_evidence_audit.csv` | reproducible, deterministic |
+
+Full writeups, including every disclosed protocol deviation and negative/null result, are in
+`reports/`: start with `reports/physionet_comprehensive_summary.md` (the consolidated findings),
+`reports/reviewer_traceability_table.md` (maps every review point to the action taken), and
+`reports/final_revision_report.md` (overall readiness verdict). The deep-learning PhysioNet
+comparison uses a reversed pretraining direction (BCI-IV 2a as source instead of PhysioNet) to
+avoid leaking each held-out PhysioNet subject into its own encoder's pretraining — see
+`reports/data_leakage_audit.md` for why this was necessary and what it does and does not control
+for. Dataset acquisition note: PhysioNet downloads go through MOABB/`pooch`; if `physionet.org`
+is flaky, mirror the dataset (ODC-By licensed) locally first rather than retrying indefinitely —
+see `kaggle_kernel/spdnet_corrcov_push/run_kernel.py` for a worked example of pre-populating
+MOABB's cache from a local mirror.
+
 ## Repository structure
 
 ```

@@ -87,6 +87,7 @@ plt.close()
 # Figure: full method comparison, all zero-shot results, sorted
 # ---------------------------------------------------------------------------
 all_methods = [
+    ("LaBraM (frozen, zero-shot)", 25.08, 1.74, "Learned (raw EEG)"),
     ("MAE-only", 27.84, 2.29, "Learned (raw EEG)"),
     ("MAE+GRL", 27.47, 2.76, "Learned (raw EEG)"),
     ("MAE+CLUB+SCIN+VIB", 26.68, 2.35, "Learned (raw EEG)"),
@@ -175,8 +176,91 @@ plt.tight_layout()
 plt.savefig(os.path.join(FIG_DIR, "statistical_tests_forest.png"), dpi=200, bbox_inches="tight")
 plt.close()
 
+# ---------------------------------------------------------------------------
+# Figure: PhysioNet comprehensive comparison (Section 10.1, Table tab:physionet-comprehensive)
+# ---------------------------------------------------------------------------
+pn_methods = [
+    ("SupCon", 33.04, 4.53, "Learned (raw EEG)"),
+    ("MAE-only", 33.99, 4.75, "Learned (raw EEG)"),
+    ("MAE+GRL", 36.80, 7.71, "Learned (raw EEG)"),
+    ("RPA", 40.26, 10.76, "Classical Riemannian"),
+    ("MDM", 42.23, 8.55, "Classical Riemannian"),
+    ("Riemannian Transformer v2", 42.60, 10.45, "Learned (geometric)"),
+    ("CSP+SVM", 48.67, 14.40, "Classical Riemannian"),
+    ("FBCSP+SVM", 48.79, 13.60, "Classical Riemannian"),
+    ("CSP+LDA", 49.40, 14.31, "Classical Riemannian"),
+    ("SPDNet", 49.40, 14.25, "Learned (geometric)"),
+    ("FgMDM", 49.44, 13.46, "Classical Riemannian"),
+    ("MEKT (BCI-IV-2a-tuned)", 50.95, 14.34, "Domain adaptation"),
+    ("MEKT (default)", 51.54, 14.35, "Domain adaptation"),
+]
+pn_methods.sort(key=lambda x: x[1])
+pn_names = [m[0] for m in pn_methods]
+pn_accs = [m[1] for m in pn_methods]
+pn_stds = [m[2] for m in pn_methods]
+pn_cats = [m[3] for m in pn_methods]
+pn_bar_colors = [cat_colors[c] for c in pn_cats]
+
+fig, ax = plt.subplots(figsize=(8, 5.5))
+y_pos = np.arange(len(pn_names))
+ax.barh(y_pos, pn_accs, xerr=pn_stds, color=pn_bar_colors, edgecolor="black", linewidth=0.4, capsize=2)
+ax.set_yticks(y_pos)
+ax.set_yticklabels(pn_names, fontsize=8)
+ax.axvline(33.3, color="gray", linestyle=":", linewidth=1, label="3-class chance (33.3%)")
+ax.set_xlabel("Zero-shot LOSO accuracy on PhysioNet (%, up to n=109)")
+ax.set_xlim(0, 75)
+ax.set_title("Every method with a BCI-IV 2a number, re-evaluated on PhysioNet", fontsize=11)
+legend_elems = [Patch(facecolor=c, label=l) for l, c in cat_colors.items()]
+ax.legend(handles=legend_elems, loc="lower right", fontsize=7.5, framealpha=0.9)
+plt.tight_layout()
+plt.savefig(os.path.join(FIG_DIR, "physionet_comprehensive_comparison.png"), dpi=200, bbox_inches="tight")
+plt.close()
+
+# ---------------------------------------------------------------------------
+# Figure: forest plot of paired statistical tests on PhysioNet (n=109, Holm-corrected)
+# ---------------------------------------------------------------------------
+pn_comparisons = [
+    "CSP+LDA $\\to$ FgMDM",
+    "CSP+SVM $\\to$ FBCSP+SVM",
+    "MEKT (default) $\\to$ MEKT (tuned)",
+    "MDM $\\to$ FgMDM",
+    "FgMDM $\\to$ MEKT (default)",
+    "RPA $\\to$ MEKT (default)",
+    "MAE+GRL $\\to$ SPDNet",
+    "SPDNet $\\to$ MEKT (default)",
+]
+pn_mean_diff = [0.03, 0.13, -0.59, 7.21, 2.10, 11.28, 12.60, 2.14]
+pn_pvals = [0.8455, 0.7793, 0.4497, 6.62e-10, 7.06e-05, 1.24e-14, 1.50e-14, 2.45e-04]
+pn_holm_sig = [False, False, False, True, True, True, True, True]
+
+fig, ax = plt.subplots(figsize=(7.5, 4.5))
+y_pos = np.arange(len(pn_comparisons))[::-1]
+colors = ["#2ca02c" if s else "#7f7f7f" for s in pn_holm_sig]
+for y, m, c in zip(y_pos, pn_mean_diff, colors):
+    ax.plot([0, m], [y, y], color=c, linewidth=2, solid_capstyle="round")
+    ax.plot(m, y, "o", color=c, markersize=8, markeredgecolor="black", markeredgewidth=0.6)
+ax.axvline(0, color="black", linestyle=":", linewidth=1)
+ax.set_yticks(y_pos)
+ax.set_yticklabels(pn_comparisons, fontsize=8.5)
+for y, m, p in zip(y_pos, pn_mean_diff, pn_pvals):
+    label = f"{m:+.2f}pp, p<0.0001" if p < 0.0001 else f"{m:+.2f}pp, p={p:.4f}"
+    ax.text(13.3, y, label, va="center", fontsize=7.5)
+ax.set_xlabel("Mean paired accuracy difference (percentage points)")
+ax.set_xlim(-2, 20)
+ax.set_title("PhysioNet ($n{=}109$): 5/8 comparisons survive Holm-Bonferroni correction")
+legend_elems = [
+    Line2D([0], [0], color="#2ca02c", marker="o", linestyle="-", markersize=7, label="Holm-significant"),
+    Line2D([0], [0], color="#7f7f7f", marker="o", linestyle="-", markersize=7, label="not significant"),
+]
+ax.legend(handles=legend_elems, loc="upper center", bbox_to_anchor=(0.5, -0.18), ncol=2, fontsize=8, framealpha=0.9)
+plt.tight_layout()
+plt.savefig(os.path.join(FIG_DIR, "physionet_statistical_tests_forest.png"), dpi=200, bbox_inches="tight")
+plt.close()
+
 print("Figures written to", FIG_DIR)
 print(" - progression_chart.png")
 print(" - per_subject_heatmap.png")
 print(" - all_methods_comparison.png")
+print(" - physionet_comprehensive_comparison.png")
+print(" - physionet_statistical_tests_forest.png")
 print(" - statistical_tests_forest.png")

@@ -81,6 +81,54 @@ def load_physionet_supcon(subjects=None, classes=("feet", "left_hand", "right_ha
     return X, y_encoded, subject_ids, label_encoder, subject_encoder
 
 
+def load_bnci_pretrain(subjects=None, align: str = "none"):
+    """Returns (X, subject_ids, subject_encoder) from BNCI2014_001 (BCI-IV 2a), for use as an
+    ALTERNATIVE pretraining source -- the reverse direction from this project's default setup
+    (PhysioNet pretrain -> BCI-IV 2a zero-shot eval). Needed for the PhysioNet-comprehensive
+    deep-learning comparison added in TMLR review response: the existing PhysioNet-pretrained
+    encoders cannot be validly zero-shot evaluated WITHIN PhysioNet itself (each held-out subject's
+    unlabeled data would already have been seen during that encoder's pretraining -- see
+    reports/data_leakage_audit.md). Mirrors load_physionet_pretrain exactly, with BNCI2014_001
+    substituted for PhysionetMI.
+    """
+    subjects = subjects or config.EVAL_SUBJECTS
+    paradigm = get_paradigm()
+    dataset = BNCI2014_001()
+
+    X, _, metadata = paradigm.get_data(dataset=dataset, subjects=subjects)
+    X = zscore_per_trial(X.astype(np.float32))
+
+    subject_encoder = LabelEncoder()
+    subject_ids = subject_encoder.fit_transform(metadata["subject"].values)
+    X = _align_by_subject_ids(X, subject_ids, align).astype(np.float32)
+    return X, subject_ids, subject_encoder
+
+
+def load_bnci_pretrain_labeled(subjects=None, classes=("feet", "left_hand", "right_hand")):
+    """Returns (X, y, subject_ids, label_encoder, subject_encoder) from BNCI2014_001, restricted to
+    the 3 classes shared with PhysioNet (drops 'tongue', which PhysioNet has no counterpart for).
+    Mirrors load_physionet_supcon exactly, but with BNCI2014_001 as the pretraining source instead
+    of PhysionetMI -- see load_bnci_pretrain docstring for why.
+    """
+    subjects = subjects or config.EVAL_SUBJECTS
+    paradigm = get_paradigm()
+    dataset = BNCI2014_001()
+
+    X, y, metadata = paradigm.get_data(dataset=dataset, subjects=subjects)
+    keep = np.isin(y, classes)
+    X, y, metadata = X[keep], y[keep], metadata[keep].reset_index(drop=True)
+
+    X = zscore_per_trial(X.astype(np.float32))
+
+    label_encoder = LabelEncoder()
+    label_encoder.fit(list(classes))
+    y_encoded = label_encoder.transform(y)
+
+    subject_encoder = LabelEncoder()
+    subject_ids = subject_encoder.fit_transform(metadata["subject"].values)
+    return X, y_encoded, subject_ids, label_encoder, subject_encoder
+
+
 def load_bnci_subject(subject: int):
     """Returns (X, y) for one BNCI2014_001 subject, for zero-shot LOSO eval."""
     paradigm = get_paradigm()

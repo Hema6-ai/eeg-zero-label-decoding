@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset, random_split
 
 from paper import config
-from paper.data import load_physionet_pretrain
+from paper.data import load_bnci_pretrain, load_physionet_pretrain
 from paper.models.mae import EEGMAE
 from paper.utils import EpochLogger, maybe_save_periodic_and_best
 
@@ -20,16 +20,26 @@ def grl_lambda_schedule(epoch: int, warmup_epochs: int, lambda_max: float) -> fl
     return lambda_max * min(1.0, epoch / max(1, warmup_epochs))
 
 
-def run(variant: str, subjects=None, epochs: int = None, device: str = None, align: str = "none"):
+def run(variant: str, subjects=None, epochs: int = None, device: str = None, align: str = "none",
+        source: str = "physionet"):
+    """source: "physionet" (default, reproduces the manuscript's checkpoints) or "bnci" -- pretrain
+    on BCI-IV 2a instead, for the PhysioNet-comprehensive deep-learning comparison added in TMLR
+    review response (see paper/data.py::load_bnci_pretrain docstring for why the direction must be
+    reversed to evaluate zero-shot WITHIN PhysioNet without leakage)."""
     assert variant in ("mae_only", "mae_grl")
+    assert source in ("physionet", "bnci")
     use_grl = variant == "mae_grl"
     config.set_seed(config.SEED)
 
     device = device or ("cuda" if torch.cuda.is_available() else "cpu")
     epochs = epochs or config.PRETRAIN_EPOCHS
-    run_name = f"pretrain_{variant}" + (f"_{align}" if align != "none" else "")
+    run_name = f"pretrain_{variant}" + (f"_{align}" if align != "none" else "") + \
+        ("_srcbnci" if source == "bnci" else "")
 
-    X, subject_ids, subject_encoder = load_physionet_pretrain(subjects, align=align)
+    if source == "bnci":
+        X, subject_ids, subject_encoder = load_bnci_pretrain(subjects, align=align)
+    else:
+        X, subject_ids, subject_encoder = load_physionet_pretrain(subjects, align=align)
     n_subjects = len(subject_encoder.classes_)
     n_channels, n_times = X.shape[1], X.shape[2]
 
@@ -110,5 +120,6 @@ if __name__ == "__main__":
     parser.add_argument("--subjects", type=int, nargs="*", default=None)
     parser.add_argument("--epochs", type=int, default=None)
     parser.add_argument("--align", choices=["none", "ea", "ra"], default="none")
+    parser.add_argument("--source", choices=["physionet", "bnci"], default="physionet")
     args = parser.parse_args()
-    run(args.variant, subjects=args.subjects, epochs=args.epochs, align=args.align)
+    run(args.variant, subjects=args.subjects, epochs=args.epochs, align=args.align, source=args.source)
