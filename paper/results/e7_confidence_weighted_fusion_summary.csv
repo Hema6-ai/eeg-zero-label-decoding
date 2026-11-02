@@ -1,0 +1,8 @@
+metric,value
+equal_weight_accuracy_mean,0.5239197530864197
+equal_weight_accuracy_std,0.14917490375700923
+conf_weighted_accuracy_mean,0.5252700617283951
+conf_weighted_accuracy_std,0.1495142614107037
+manuscript_reported_value,0.5253
+diff_from_reported_pp,-0.002993827160491236
+reproduces_within_0.05pp,True

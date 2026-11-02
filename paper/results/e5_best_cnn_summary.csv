@@ -1,0 +1,2 @@
+arch,seed42_accuracy,mean_accuracy_across_5_seeds,std_accuracy_across_5_seeds,n_subjects
+eegnetv4,0.687275641025641,0.686826923076923,0.001960558872206426,52

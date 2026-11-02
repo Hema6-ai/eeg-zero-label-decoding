@@ -1,0 +1,2 @@
+comparison,n_subjects,mean_diff_pp,ci_lo_pp,ci_hi_pp,bootstrap_se_pp,wilcoxon_p,rank_biserial,n_improved,n_worse
+"8-member ensemble (full PN, in-sample) -> EEGNetv4+EA (full PN)",109,1.0403600346276254,-0.3814786715597199,2.452369889832954,0.7220465659237291,0.11384117751302311,0.1743119266055046,64,45

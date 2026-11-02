@@ -50,6 +50,16 @@ and evaluated on the held-out subject, for every fold -- identical protocol to e
 import csv
 import os
 
+import moabb.datasets as _md
+if not hasattr(_md, "BNCI2014001"):
+    # braindecode 1.2.0 imports moabb.datasets.BNCI2014001 (pre-rename); this project's moabb
+    # version uses BNCI2014_001. Compatibility alias only, no behavior change to either library.
+    # MUST be at module level (not just in __main__, where it lived before and silently failed
+    # to apply whenever this module was imported as a library rather than run directly -- the
+    # actual cause of both LaBraM-fine-tune Kaggle kernels' first-attempt failures) so it applies
+    # regardless of how this module is imported.
+    _md.BNCI2014001 = _md.BNCI2014_001
+
 import numpy as np
 import torch
 import torch.nn.functional as F
@@ -246,9 +256,4 @@ def run(subjects=None, device: str = None):
 
 
 if __name__ == "__main__":
-    import moabb.datasets as _md
-    if not hasattr(_md, "BNCI2014001"):
-        # braindecode 1.2.0 imports moabb.datasets.BNCI2014001 (pre-rename); this project's moabb
-        # version uses BNCI2014_001. Compatibility alias only, no behavior change to either library.
-        _md.BNCI2014001 = _md.BNCI2014_001
     run()

@@ -1,0 +1,3 @@
+comparison,n_subjects,mean_diff_pp,ci_lo_pp,ci_hi_pp,bootstrap_se_pp,wilcoxon_p,rank_biserial,n_improved,n_worse,holm_significant
+EEGNetv4+EA (full PN) vs EA+FgMDM (full PhysioNet),109,3.555281870179262,2.176823389210968,4.937256330093434,0.7035979707742035,8.374041556804162e-06,0.308411214953271,70,37,True
+EEGNetv4+EA (full PN) vs MEKT default (full PhysioNet),109,1.452108647019963,0.1800590606442565,2.698377934723848,0.6396577144353928,0.013204568002657702,0.24074074074074073,67,41,True

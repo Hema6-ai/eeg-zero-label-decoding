@@ -1,0 +1,2 @@
+comparison,n_subjects,mean_diff_pp,ci_lo_pp,ci_hi_pp,bootstrap_se_pp,wilcoxon_p,rank_biserial,n_improved,n_worse
+FgMDM -> E4 nested-selected ensemble (bci2a),9,2.488425925925926,0.4629629629629632,4.436728395061728,1.0204790371252794,0.07421875,0.5555555555555556,7,2

@@ -1,0 +1,2 @@
+comparison,n_subjects,mean_diff_pp,ci_lo_pp,ci_hi_pp,bootstrap_se_pp,wilcoxon_p,rank_biserial,n_improved,n_worse
+TS+LR (BCI-2a): no-EA -> EA,9,11.24614197530864,6.983024691358025,15.875771604938272,2.2776261205083013,0.0078125,1.0,8,0

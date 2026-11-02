@@ -1,0 +1,2 @@
+comparison,n_subjects,mean_diff_pp,ci_lo_pp,ci_hi_pp,bootstrap_se_pp,wilcoxon_p,rank_biserial,n_improved,n_worse
+EEGNetv4 (Cho2017): no-EA -> EA,52,2.80544871794872,1.4519230769230789,4.312179487179489,0.7315395221960502,0.0001310598245315525,0.49019607843137253,38,13
