@@ -36,7 +36,7 @@ ax.axhline(25, color="gray", linestyle=":", linewidth=1, label="4-class chance (
 ax.axhline(58.68, color="firebrick", linestyle="--", linewidth=1.2, label="Calibrated EEGNet reference (58.68%)")
 for bar, acc in zip(bars, stage_acc):
     ax.text(bar.get_x() + bar.get_width() / 2, acc + 1.5, f"{acc:.2f}%", ha="center", fontsize=9, fontweight="bold")
-ax.set_ylabel("Zero-shot LOSO accuracy (%)")
+ax.set_ylabel("Zero-label LOSO accuracy (%)")
 ax.set_ylim(0, 75)
 ax.set_title("Every gain came from signal quality, not method complexity")
 ax.legend(loc="upper left", fontsize=8, framealpha=0.9)
@@ -78,13 +78,13 @@ for i in range(len(methods)):
 ax.set_xlabel("Held-out subject (BCI-IV 2a)")
 cbar = plt.colorbar(im, ax=ax, fraction=0.03, pad=0.02)
 cbar.set_label("Accuracy (%)", fontsize=8)
-ax.set_title("Subject 2 never crosses ~32% under any zero-shot method")
+ax.set_title("Subject 2 never crosses ~32% under any zero-label method")
 plt.tight_layout()
 plt.savefig(os.path.join(FIG_DIR, "per_subject_heatmap.png"), dpi=200)
 plt.close()
 
 # ---------------------------------------------------------------------------
-# Figure: full method comparison, all zero-shot results, sorted
+# Figure: full method comparison, all zero-label results, sorted
 # ---------------------------------------------------------------------------
 all_methods = [
     ("LaBraM (frozen, zero-shot)", 25.08, 1.74, "Learned (raw EEG)"),
@@ -125,9 +125,9 @@ ax.set_yticks(y_pos)
 ax.set_yticklabels(names, fontsize=8)
 ax.axvline(25, color="gray", linestyle=":", linewidth=1)
 ax.axvline(58.68, color="firebrick", linestyle="--", linewidth=1.2)
-ax.set_xlabel("Zero-shot LOSO accuracy (%)")
+ax.set_xlabel("Zero-label LOSO accuracy (%)")
 ax.set_xlim(0, 75)
-ax.set_title("Representative zero-shot methods tried, sorted by accuracy")
+ax.set_title("Representative zero-label methods tried, sorted by accuracy")
 from matplotlib.patches import Patch
 legend_elems = [Patch(facecolor=c, label=l) for l, c in cat_colors.items()]
 ax.legend(handles=legend_elems, loc="lower right", fontsize=7.5, framealpha=0.9)
@@ -207,7 +207,7 @@ ax.barh(y_pos, pn_accs, xerr=pn_stds, color=pn_bar_colors, edgecolor="black", li
 ax.set_yticks(y_pos)
 ax.set_yticklabels(pn_names, fontsize=8)
 ax.axvline(33.3, color="gray", linestyle=":", linewidth=1, label="3-class chance (33.3%)")
-ax.set_xlabel("Zero-shot LOSO accuracy on PhysioNet (%, up to n=109)")
+ax.set_xlabel("Zero-label LOSO accuracy on PhysioNet (%, up to n=109)")
 ax.set_xlim(0, 75)
 ax.set_title("Every method with a BCI-IV 2a number, re-evaluated on PhysioNet", fontsize=11)
 legend_elems = [Patch(facecolor=c, label=l) for l, c in cat_colors.items()]

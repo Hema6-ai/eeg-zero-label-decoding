@@ -130,9 +130,9 @@ def plot_centroid_heatmap(mae_centroids, csp_centroids, class_names, out_path):
                 dist[i, j] = np.linalg.norm(centroids[i] - centroids[j])
         sns.heatmap(dist, annot=True, fmt=".1f", cmap="viridis", ax=ax,
                     xticklabels=class_names, yticklabels=class_names, cbar=True)
-        ax.set_title(f"{name}: class centroid L2 distance")
+        ax.set_title(f"{name}: class centroid L2 distance", fontsize=10)
     fig.tight_layout()
-    fig.savefig(out_path, dpi=300, facecolor="white")
+    fig.savefig(out_path, dpi=300, facecolor="white", bbox_inches="tight", pad_inches=0.15)
     plt.close(fig)
     print(f"Saved {out_path}")
 

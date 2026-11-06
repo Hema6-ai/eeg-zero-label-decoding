@@ -1,0 +1,2 @@
+dataset,arch,ea,window,seed42_accuracy,mean_accuracy_across_seeds,std_accuracy_across_seeds,n_seeds,n_subjects
+physionet_full,spdnet_matched,ea,default,0.4579825393766201,0.4717693160144551,0.010434660391038384,3,109

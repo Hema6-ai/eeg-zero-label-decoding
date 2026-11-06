@@ -155,12 +155,25 @@ python paper/eval_riemannian_advanced.py   # classical baselines, incl. EA+FgMDM
 python paper/eval_mekt.py                  # MEKT-lite, single default window/estimator (48.48%)
 python paper/eval_mekt_ensemble.py         # in-sample 8-member ensemble (52.39%, see table above)
 python paper/eval_e4_nested_selection.py   # primary generalization estimate (49.94%, see table above)
+python paper/eval_e7_confidence_weighted_fusion.py  # confidence-weighted refinement (52.53%)
 ```
 
 Methods requiring pretraining (Families 1/2) are trained first via the corresponding `train_*.py`
 / `run_*.py` script, then evaluated zero-label with the encoder frozen via the matching `eval_*.py`.
 Family 4's supervised architectures are trained end-to-end via `run_dl_loso_sweep.py`. Every run is
 seeded at 42 unless a seed sweep is explicitly being performed.
+
+### Script-to-table mapping
+
+| Manuscript row | Script | Output |
+|---|---|---|
+| In-sample 8-member ensemble (52.39%, Table 1/2) | `eval_mekt_ensemble.py` | per-fold CSV under `paper/results/` |
+| Primary nested generalization estimate (49.94%, Table 1) | `eval_e4_nested_selection.py` | per-fold CSV under `paper/results/` |
+| Confidence-weighted refinement (52.53%, Section "negative-result sweep") | `eval_e7_confidence_weighted_fusion.py` | per-fold CSV under `paper/results/` |
+
+Each script writes one per-fold CSV; every reported mean/std/kappa is independently recomputed
+from those CSVs by `paper/verify_all_claims.py`, which can be re-run to confirm every number in
+the manuscript against its source file.
 
 ## Citation
 

@@ -25,7 +25,7 @@ boxes = [
      "4 windows × 2 estimators, soft-voted\n(52.39% — selected on these same subjects, optimistic)",
      "#fbe9e9", "#b23b3b"),
     ("7. Stress-test",
-     "7 further extensions (filter-banks, stacking,\npseudo-labeling, …) — none improve on ensemble",
+     "10 further extensions (filter-banks, stacking,\npseudo-labeling, …) — none improve on ensemble",
      "#eae8f6", "#5d4f9e"),
     ("8. Validate honestly",
      "Fully nested LOSO (re-search per fold, source\nsubjects only) → 49.94%, 2.4–3.1pp below the\n"
@@ -34,9 +34,11 @@ boxes = [
 ]
 
 n = len(boxes)
-box_h = 1.15
+base_box_h = 1.15
+extra_line_h = 0.32
+box_heights = [base_box_h + extra_line_h * max(0, body.count("\n") - 1) for _, body, _, _ in boxes]
 gap = 0.42
-fig_h = n * box_h + (n - 1) * gap + 1.1
+fig_h = sum(box_heights) + (n - 1) * gap + 1.1
 fig_w = 8.0
 
 fig, ax = plt.subplots(figsize=(fig_w, fig_h * 0.72))
@@ -46,7 +48,7 @@ ax.axis("off")
 
 y = fig_h - 1.0
 centers = []
-for title, body, face, edge in boxes:
+for (title, body, face, edge), box_h in zip(boxes, box_heights):
     box = FancyBboxPatch((0.3, y - box_h), fig_w - 0.6, box_h,
                           boxstyle="round,pad=0.02,rounding_size=0.06",
                           linewidth=1.6, edgecolor=edge, facecolor=face)
@@ -65,7 +67,7 @@ ax.annotate("", xy=(fig_w / 2, centers[-1][1]), xytext=(fig_w / 2, return_y + 0.
             arrowprops=dict(arrowstyle="-|>", color="#777777", lw=1.8))
 ax.text(fig_w / 2, return_y,
         "Return: 8-member MEKT-lite ensemble\n"
-        "49.94% honestly-nested zero-shot LOSO accuracy (κ ≈ 0.333)\n"
+        "49.94% honestly-nested zero-label LOSO accuracy (κ ≈ 0.333)\n"
         "(52.39% selected on these same subjects, optimistic),\n"
         "leakage-checked, cross-dataset replicated",
         fontsize=10.8, style="italic", ha="center", va="top")

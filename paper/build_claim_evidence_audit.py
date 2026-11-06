@@ -28,8 +28,9 @@ for label, fname, claim_acc, claim_std, claim_kappa, claim_n in CLAIMS:
     if os.path.exists(path):
         r = recompute(path)
         acc_pct, std_pct = r["acc_mean"] * 100, r["acc_std"] * 100
-        ok = (abs(acc_pct - claim_acc) < 0.1 and abs(std_pct - claim_std) < 0.1
-              and abs(r["kappa_mean"] - claim_kappa) < 0.01 and r["n"] == claim_n)
+        ok = abs(acc_pct - claim_acc) < 0.1 and abs(std_pct - claim_std) < 0.1 and r["n"] == claim_n
+        if claim_kappa is not None:
+            ok = ok and abs(r["kappa_mean"] - claim_kappa) < 0.01
         status = "VERIFIED" if ok else "MISMATCH"
         if not ok:
             discrepancy = (f"recomputed acc={acc_pct:.2f} std={std_pct:.2f} kappa={r['kappa_mean']:.3f} "
