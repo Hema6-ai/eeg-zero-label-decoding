@@ -156,6 +156,9 @@ python paper/eval_mekt.py                  # MEKT-lite, single default window/es
 python paper/eval_mekt_ensemble.py         # in-sample 8-member ensemble (52.39%, see table above)
 python paper/eval_e4_nested_selection.py   # primary generalization estimate (49.94%, see table above)
 python paper/eval_e7_confidence_weighted_fusion.py  # confidence-weighted refinement (52.53%)
+python paper/eval_spdnet_matched_protocol.py        # SPDNet matched-protocol fairness check (Table 8)
+python paper/tune_spdnet_matched_protocol.py        # SPDNet hyperparameter search, PhysioNet30 source-val only
+python paper/eval_spdnet_matched_protocol_tuned.py  # SPDNet matched-protocol, tuned config (Table 8)
 ```
 
 Methods requiring pretraining (Families 1/2) are trained first via the corresponding `train_*.py`
@@ -170,6 +173,9 @@ seeded at 42 unless a seed sweep is explicitly being performed.
 | In-sample 8-member ensemble (52.39%, Table 1/2) | `eval_mekt_ensemble.py` | per-fold CSV under `paper/results/` |
 | Primary nested generalization estimate (49.94%, Table 1) | `eval_e4_nested_selection.py` | per-fold CSV under `paper/results/` |
 | Confidence-weighted refinement (52.53%, Section "negative-result sweep") | `eval_e7_confidence_weighted_fusion.py` | per-fold CSV under `paper/results/` |
+| SPDNet matched-protocol fairness check, untuned (Table 8) | `eval_spdnet_matched_protocol.py` + `stats_spdnet_matched_protocol.py` | per-fold CSVs under `paper/results/` (`e1_dlloso_spdnet_matched_*`) |
+| SPDNet matched-protocol hyperparameter search (Table 8, "Robustness to hyperparameter tuning") | `tune_spdnet_matched_protocol.py` | `paper/results/spdnet_hparam_search_physionet30.csv` |
+| SPDNet matched-protocol fairness check, tuned config (Table 8, "Robustness to hyperparameter tuning") | `eval_spdnet_matched_protocol_tuned.py` + `stats_spdnet_tuned_protocol.py` | per-fold CSVs under `paper/results/` (`e1_dlloso_spdnet_tuned_*`) |
 
 Each script writes one per-fold CSV; every reported mean/std/kappa is independently recomputed
 from those CSVs by `paper/verify_all_claims.py`, which can be re-run to confirm every number in
